@@ -1,0 +1,44 @@
+name: Slack Fail
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    environment: Testing
+    steps:
+      - name: Slack Notification for Deployment
+        id: slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        uses: slackapi/slack-github-action@v1.24.0
+        with:  # TODO: improve message and styling. "View PR/Commit" button, colorful left bar, better message etc.
+          payload: |
+            {
+              "text": "${{job.status == 'success' && ':tada: Success:' || ':red_circle: Failure:' }} \"${{ github.ref_name }}\" deployment by ${{ github.actor }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text":{
+                    "type": "mrkdwn",
+                    "text": "${{job.status == 'success' && ':tada: Success:' || ':red_circle: Failure:' }} \"${{ github.ref_name }}\" deployment by ${{ github.actor }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text":{
+                        "type": "plain_text",
+                        "text": "View Action"
+                      },
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
